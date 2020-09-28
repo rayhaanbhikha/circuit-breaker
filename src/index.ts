@@ -37,8 +37,9 @@ app.get("/api", async (req, res) => {
   }
 });
 
-app.get("/cbstate", (req, res) => {
-  res.send(cb.getState()?.state);
+app.get("/cbstate", async (req, res) => {
+  const { state } = await cb.currentStateManager.getState();
+  res.send(state);
 });
 
 app.listen(3000, () => console.log("server started on port 8080"));
