@@ -9,7 +9,7 @@ import { OpenState } from "./States/CBOpen";
 import { State } from "./States/State";
 
 export class CircuitBreaker {
-  private currentState: State;
+  private currentState?: State;
   readonly closedState: ClosedState;
   readonly openState: OpenState;
   readonly halfOpenState: HalfOpenState;
@@ -23,9 +23,6 @@ export class CircuitBreaker {
 
     this.config = new CircuitBreakerConfig(config);
     this.metrics = new CircuitBreakerMetrics(this.config);
-
-    this.currentState = this.closedState;
-    this.currentState.init();
   }
 
   setCurrentState(newState: State) {
@@ -34,7 +31,10 @@ export class CircuitBreaker {
   }
 
   async exec(cb: Function) {
-    return this.currentState.exec(cb);
+    if (!this.currentState) {
+      this.setCurrentState(this.closedState);
+    }
+    return this.currentState?.exec(cb);
   }
 
   getState() {
