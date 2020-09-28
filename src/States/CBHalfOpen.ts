@@ -30,11 +30,7 @@ export class HalfOpenState implements State {
         this.cb.metrics.hasExceededErrorThreshold()
       )
         this.cb.transitionToOpenState();
-      if (this.cb.config.fallback) {
-        return this.cb.config?.fallback();
-      } else {
-        throw error;
-      }
+      return this.cb.resumeWithFallback(error);
     }
   }
 

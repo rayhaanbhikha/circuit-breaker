@@ -26,11 +26,7 @@ export class ClosedState implements State {
       )
         this.cb.transitionToOpenState();
 
-      if (this.cb.config.fallback) {
-        return this.cb.config?.fallback();
-      } else {
-        throw error;
-      }
+      return this.cb.resumeWithFallback(error);
     }
   }
 }

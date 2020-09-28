@@ -21,11 +21,6 @@ export class OpenState implements State {
 
   async exec(cb: Function) {
     console.log("CB currently open");
-    if (this.cb.config.fallback) {
-      return this.cb.config?.fallback();
-    } else {
-      // TODO: create error here.
-      return new Error("Circuit breaker open");
-    }
+    return this.cb.resumeWithFallback();
   }
 }

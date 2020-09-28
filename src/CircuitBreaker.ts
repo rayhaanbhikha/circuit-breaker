@@ -55,4 +55,15 @@ export class CircuitBreaker {
     console.log("TRANSITIONED TO ---->>>> HALF_OPEN STATE");
     this.setCurrentState(this.halfOpenState);
   }
+
+  resumeWithFallback(error?: Error) {
+    if (this.config.fallback) {
+      return this.config.fallback();
+    } else if (error) {
+      throw error;
+    } else {
+      // TODO: add custom error for this.
+      throw new Error("Fallback not configured");
+    }
+  }
 }
