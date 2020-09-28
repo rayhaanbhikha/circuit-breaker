@@ -1,4 +1,4 @@
-export class RingBuffer {
+export class FixedSizeSlidingWindow {
   private buffer: number[];
   private currentBufferIndex = 0;
   private bufferMaxSize: number;
@@ -8,20 +8,8 @@ export class RingBuffer {
     this.buffer = [];
   }
 
-  get bufferSize() {
-    return this.currentBufferIndex;
-  }
-
-  get internalBuffer() {
-    return this.buffer;
-  }
-
-  recordError() {
-    this.add(1);
-  }
-
-  recordSuccess() {
-    this.add(0);
+  get isFull() {
+    return this.buffer.length === this.bufferMaxSize;
   }
 
   get currentErrorThreshold() {
@@ -39,7 +27,7 @@ export class RingBuffer {
     return Math.floor((errors / (successes + errors)) * 100);
   }
 
-  private add(num: number) {
+  add(num: number) {
     const index = this.currentBufferIndex % this.bufferMaxSize;
     this.buffer[index] = num;
     this.currentBufferIndex++;
