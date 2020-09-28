@@ -7,10 +7,6 @@ import {
   CircuitBreakerState,
 } from "./CircuitBreakerLocalState";
 import { CircuitBreakerMetrics } from "./CircuitBreakerMetrics";
-import { ClosedState } from "./States/CBClosed";
-import { HalfOpenState } from "./States/CBHalfOpen";
-import { OpenState } from "./States/CBOpen";
-import { State } from "./States/State";
 
 export class CircuitBreaker {
   readonly config: CircuitBreakerConfig;
