@@ -27,17 +27,23 @@ export class ClosedState implements State {
     try {
       const res = await callback();
       this.metrics.recordSuccess();
+      if (this.checkIfCBshouldOpen())
+        await this.cbState.transitionToOpenState();
       return res;
     } catch (error) {
       // TODO: filter errors with options or status codes?
       this.metrics.recordError();
-      if (
-        this.metrics.isSlidingWindowFull() &&
-        this.metrics.hasExceededErrorThreshold()
-      )
-        this.cbState.transitionToOpenState();
+      if (this.checkIfCBshouldOpen())
+        await this.cbState.transitionToOpenState();
 
       return this.config.fallback(error);
     }
+  }
+
+  checkIfCBshouldOpen() {
+    return (
+      this.metrics.isSlidingWindowFull() &&
+      this.metrics.hasExceededErrorThreshold()
+    );
   }
 }
