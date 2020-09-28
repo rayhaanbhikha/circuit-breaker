@@ -1,0 +1,12 @@
+/// call to redis
+
+1) check if currentState exists.
+    otherwise initalise by setting state to closed in redis and then do the exec call
+2) sync state redis
+  - read state from Redis
+  - check if state in redis matched currentstate object in state machine
+    if not change to new state.
+
+// setState function will need to update redis as well statemachine.
+
+// Redis will be used as source of truth.
