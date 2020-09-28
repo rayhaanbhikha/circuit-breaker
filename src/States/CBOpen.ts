@@ -1,11 +1,22 @@
-import { CircuitBreaker } from "../CircuitBreaker";
+import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
+import { CircuitBreakerState } from "../CircuitBreakerLocalState";
+import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
 import { State } from "./State";
 
 export class OpenState implements State {
   readonly state = "OPEN";
-  private cb: CircuitBreaker;
-  constructor(cb: CircuitBreaker) {
-    this.cb = cb;
+  private config: CircuitBreakerConfig;
+  private metrics: CircuitBreakerMetrics;
+  private cbState: CircuitBreakerState;
+
+  constructor(
+    config: CircuitBreakerConfig,
+    metrics: CircuitBreakerMetrics,
+    cbState: CircuitBreakerState
+  ) {
+    this.config = config;
+    this.metrics = metrics;
+    this.cbState = cbState;
   }
 
   init() {
@@ -13,14 +24,13 @@ export class OpenState implements State {
   }
 
   startTimerToHalfOpenState() {
-    setTimeout(
-      () => this.cb.transitionToHalfOpenState(),
-      this.cb.config.waitDurationInOpenState
-    );
+    setTimeout(async () => {
+      await this.cbState.transitionToHalfOpenState();
+    }, this.config.waitDurationInOpenState);
   }
 
   async exec(cb: Function) {
     console.log("CB currently open");
-    return this.cb.resumeWithFallback();
+    return this.config.fallback();
   }
 }

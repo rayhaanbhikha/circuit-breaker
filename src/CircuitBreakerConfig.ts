@@ -16,7 +16,7 @@ export interface ICircuitBreakerConfig {
 }
 
 export class CircuitBreakerConfig {
-  readonly fallback?: Function;
+  private fallbackFunc?: Function;
   readonly failureRateThreshold: number;
   readonly permittedNumberOfCallsInHalfOpenState: number;
   readonly slidingWindowSize: number;
@@ -30,6 +30,17 @@ export class CircuitBreakerConfig {
     this.minimumNumberOfCalls =
       config.minimumNumberOfCalls || this.slidingWindowSize;
     this.waitDurationInOpenState = config.waitDurationInOpenState;
-    this.fallback = config.fallback;
+    this.fallbackFunc = config.fallback;
+  }
+
+  fallback(error?: Error) {
+    if (this.fallbackFunc) {
+      return this.fallbackFunc();
+    } else if (error) {
+      throw error;
+    } else {
+      // TODO: add custom error for this.
+      throw new Error("Fallback not configured");
+    }
   }
 }

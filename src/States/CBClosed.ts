@@ -1,32 +1,43 @@
-import { CircuitBreaker } from "../CircuitBreaker";
+import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
+import { CircuitBreakerState } from "../CircuitBreakerLocalState";
+import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
 import { State } from "./State";
 
 export class ClosedState implements State {
   readonly state = "CLOSED";
-  private cb: CircuitBreaker;
-  constructor(cb: CircuitBreaker) {
-    this.cb = cb;
+  private config: CircuitBreakerConfig;
+  private metrics: CircuitBreakerMetrics;
+  private cbState: CircuitBreakerState;
+
+  constructor(
+    config: CircuitBreakerConfig,
+    metrics: CircuitBreakerMetrics,
+    cbState: CircuitBreakerState
+  ) {
+    this.config = config;
+    this.metrics = metrics;
+    this.cbState = cbState;
   }
 
   init() {
-    this.cb.metrics.resetSlidingWindow(this.cb.config.slidingWindowSize);
+    this.metrics.resetSlidingWindow(this.config.slidingWindowSize);
   }
 
   async exec(callback: Function) {
     try {
       const res = await callback();
-      this.cb.metrics.recordSuccess();
+      this.metrics.recordSuccess();
       return res;
     } catch (error) {
       // TODO: filter errors with options or status codes?
-      this.cb.metrics.recordError();
+      this.metrics.recordError();
       if (
-        this.cb.metrics.isSlidingWindowFull() &&
-        this.cb.metrics.hasExceededErrorThreshold()
+        this.metrics.isSlidingWindowFull() &&
+        this.metrics.hasExceededErrorThreshold()
       )
-        this.cb.transitionToOpenState();
+        this.cbState.transitionToOpenState();
 
-      return this.cb.resumeWithFallback(error);
+      return this.config.fallback(error);
     }
   }
 }
