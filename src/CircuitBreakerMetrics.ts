@@ -15,10 +15,12 @@ export class CircuitBreakerMetrics {
     this.slidingWindow = new FixedSizeSlidingWindow(size);
   }
 
+  // TODO: could be emitted as an event.
   recordSuccess() {
     this.slidingWindow.add(0);
   }
 
+  // TODO: could be emitted as an event
   recordError() {
     this.slidingWindow.add(1);
   }
