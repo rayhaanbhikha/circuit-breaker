@@ -9,14 +9,14 @@ export interface ICircuitBreakerConfig {
 
   // open state config.
   slidingWindowSize: number;
-  minimumNumberOfCalls: number;
+  minimumNumberOfCalls?: number;
   waitDurationInOpenState: number;
 
-  fallback: Function;
+  fallback?: Function;
 }
 
 export class CircuitBreakerConfig {
-  readonly fallback: Function;
+  readonly fallback?: Function;
   readonly failureRateThreshold: number;
   readonly permittedNumberOfCallsInHalfOpenState: number;
   readonly slidingWindowSize: number;
@@ -27,7 +27,8 @@ export class CircuitBreakerConfig {
     this.permittedNumberOfCallsInHalfOpenState =
       config.permittedNumberOfCallsInHalfOpenState;
     this.slidingWindowSize = config.slidingWindowSize;
-    this.minimumNumberOfCalls = config.minimumNumberOfCalls;
+    this.minimumNumberOfCalls =
+      config.minimumNumberOfCalls || this.slidingWindowSize;
     this.waitDurationInOpenState = config.waitDurationInOpenState;
     this.fallback = config.fallback;
   }

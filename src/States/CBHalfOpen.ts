@@ -7,7 +7,9 @@ export class HalfOpenState implements State {
   private cb: CircuitBreaker;
   constructor(cb: CircuitBreaker) {
     this.cb = cb;
-    cb.setState(cb.halfOpenState);
+  }
+
+  init() {
     this.cb.metrics.resetSlidingWindow(
       this.cb.config.permittedNumberOfCallsInHalfOpenState
     );
@@ -18,25 +20,22 @@ export class HalfOpenState implements State {
       const res = await callback();
       this.cb.metrics.recordSuccess();
 
-      if (this.isReadyToCloseCB()) this.transitionToClosedState();
+      if (this.isReadyToCloseCB()) this.cb.transitionToClosedState();
 
       return res;
     } catch (error) {
       this.cb.metrics.recordError();
-      if (this.cb.metrics.hasExceededErrorThreshold())
-        this.transitionToOpenState();
-      return this.cb.config.fallback(); // or throw error
+      if (
+        this.cb.metrics.isSlidingWindowFull() &&
+        this.cb.metrics.hasExceededErrorThreshold()
+      )
+        this.cb.transitionToOpenState();
+      if (this.cb.config.fallback) {
+        return this.cb.config?.fallback();
+      } else {
+        throw error;
+      }
     }
-  }
-
-  transitionToOpenState() {
-    console.log("TRANSITIONED TO ---->>>> OPEN STATE");
-    this.cb.setState(this.cb.openState);
-  }
-
-  transitionToClosedState() {
-    console.log("TRANSITIONED TO ---->>>> CLOSED STATE");
-    this.cb.setState(this.cb.closedState);
   }
 
   isReadyToCloseCB() {

@@ -6,23 +6,26 @@ export class OpenState implements State {
   private cb: CircuitBreaker;
   constructor(cb: CircuitBreaker) {
     this.cb = cb;
-    cb.setState(cb.openState);
+  }
+
+  init() {
     this.startTimerToHalfOpenState();
   }
 
   startTimerToHalfOpenState() {
     setTimeout(
-      this.transitionToNextState,
+      () => this.cb.transitionToHalfOpenState(),
       this.cb.config.waitDurationInOpenState
     );
   }
 
-  transitionToNextState() {
-    console.log("TRANSITIONED TO ---->>>> OPEN STATE");
-    this.cb.setState(this.cb.halfOpenState);
-  }
-
-  exec(cb: Function) {
-    return this.cb.config.fallback();
+  async exec(cb: Function) {
+    console.log("CB currently open");
+    if (this.cb.config.fallback) {
+      return this.cb.config?.fallback();
+    } else {
+      // TODO: create error here.
+      return new Error("Circuit breaker open");
+    }
   }
 }

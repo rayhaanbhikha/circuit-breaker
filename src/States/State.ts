@@ -1,3 +1,5 @@
 export interface State {
-  exec: (cb: Function) => void;
+  state: string;
+  init: () => void;
+  exec: (cb: Function) => Promise<any>;
 }

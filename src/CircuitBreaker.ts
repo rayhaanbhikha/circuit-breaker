@@ -20,21 +20,39 @@ export class CircuitBreaker {
     this.closedState = new ClosedState(this);
     this.openState = new OpenState(this);
     this.halfOpenState = new HalfOpenState(this);
-    this.currentState = this.closedState;
 
     this.config = new CircuitBreakerConfig(config);
     this.metrics = new CircuitBreakerMetrics(this.config);
+
+    this.currentState = this.closedState;
+    this.currentState.init();
   }
 
-  setState(newState: State) {
+  setCurrentState(newState: State) {
     this.currentState = newState;
+    this.currentState.init();
   }
 
-  exec(cb: Function) {
+  async exec(cb: Function) {
     return this.currentState.exec(cb);
   }
 
   getState() {
     return this.currentState;
+  }
+
+  transitionToOpenState() {
+    console.log("TRANSITIONED TO ---->>>> OPEN STATE");
+    this.setCurrentState(this.openState);
+  }
+
+  transitionToClosedState() {
+    console.log("TRANSITIONED TO ---->>>> CLOSED STATE");
+    this.setCurrentState(this.closedState);
+  }
+
+  transitionToHalfOpenState() {
+    console.log("TRANSITIONED TO ---->>>> HALF_OPEN STATE");
+    this.setCurrentState(this.halfOpenState);
   }
 }
