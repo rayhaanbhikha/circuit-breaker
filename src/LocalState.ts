@@ -1,3 +1,5 @@
+import { EventEmitter } from "events";
+
 import { State } from "./States/State";
 import { ClosedState } from "./States/CBClosed";
 import { HalfOpenState } from "./States/CBHalfOpen";
@@ -12,10 +14,46 @@ export class LocalState implements CircuitBreakerState {
   private openState: OpenState;
   private halfOpenState: HalfOpenState;
 
+  private stateTransitionEventListener = new EventEmitter();
+
   constructor(config: CircuitBreakerConfig, metrics: CircuitBreakerMetrics) {
-    this.closedState = new ClosedState(config, metrics, this);
-    this.openState = new OpenState(config, metrics, this);
-    this.halfOpenState = new HalfOpenState(config, metrics, this);
+    this.closedState = new ClosedState(
+      config,
+      metrics,
+      this.stateTransitionEventListener
+    );
+    this.openState = new OpenState(
+      config,
+      metrics,
+      this.stateTransitionEventListener
+    );
+    this.halfOpenState = new HalfOpenState(
+      config,
+      metrics,
+      this.stateTransitionEventListener
+    );
+
+    this.setEventListeners();
+  }
+
+  setEventListeners() {
+    this.stateTransitionEventListener.on(
+      "TRANSITION_STATE",
+      async (state: string) => {
+        console.log("STATE EMITTED: ", state);
+        switch (state) {
+          case this.closedState.state:
+            await this.transitionToClosedState();
+            return;
+          case this.openState.state:
+            await this.transitionToOpenState();
+            return;
+          case this.halfOpenState.state:
+            await this.transitionToHalfOpenState();
+            return;
+        }
+      }
+    );
   }
 
   async setCurrentState(newState: State) {

@@ -2,21 +2,22 @@ import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
 import { CircuitBreakerState } from "../CircuitBreakerState";
 import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
 import { State } from "./State";
+import { EventEmitter } from "events";
 
 export class HalfOpenState implements State {
   readonly state = "HALF_OPEN";
   private config: CircuitBreakerConfig;
   private metrics: CircuitBreakerMetrics;
-  private cbState: CircuitBreakerState;
+  private stel: EventEmitter;
 
   constructor(
     config: CircuitBreakerConfig,
     metrics: CircuitBreakerMetrics,
-    cbState: CircuitBreakerState
+    stel: EventEmitter
   ) {
     this.config = config;
     this.metrics = metrics;
-    this.cbState = cbState;
+    this.stel = stel;
   }
 
   init() {
@@ -30,7 +31,7 @@ export class HalfOpenState implements State {
       const res = await callback();
       this.metrics.recordSuccess();
 
-      if (this.isReadyToCloseCB()) await this.cbState.transitionToClosedState();
+      if (this.isReadyToCloseCB()) this.stel.emit("TRANSITION_STATE", "CLOSED");
 
       return res;
     } catch (error) {
@@ -39,7 +40,8 @@ export class HalfOpenState implements State {
         this.metrics.isSlidingWindowFull() &&
         this.metrics.hasExceededErrorThreshold()
       )
-        await this.cbState.transitionToOpenState();
+        this.stel.emit("TRANSITION_STATE", "OPEN");
+
       return this.config.fallback(error);
     }
   }

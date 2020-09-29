@@ -2,21 +2,22 @@ import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
 import { CircuitBreakerState } from "../CircuitBreakerState";
 import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
 import { State } from "./State";
+import { EventEmitter } from "events";
 
 export class OpenState implements State {
   readonly state = "OPEN";
   private config: CircuitBreakerConfig;
   private metrics: CircuitBreakerMetrics;
-  private cbState: CircuitBreakerState;
+  private stel: EventEmitter;
 
   constructor(
     config: CircuitBreakerConfig,
     metrics: CircuitBreakerMetrics,
-    cbState: CircuitBreakerState
+    stel: EventEmitter
   ) {
     this.config = config;
     this.metrics = metrics;
-    this.cbState = cbState;
+    this.stel = stel;
   }
 
   init() {
@@ -24,8 +25,8 @@ export class OpenState implements State {
   }
 
   startTimerToHalfOpenState() {
-    setTimeout(async () => {
-      await this.cbState.transitionToHalfOpenState();
+    setTimeout(() => {
+      this.stel.emit("TRANSITION_STATE", "HALF_OPEN");
     }, this.config.waitDurationInOpenState);
   }
 
