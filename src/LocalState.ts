@@ -4,17 +4,9 @@ import { HalfOpenState } from "./States/CBHalfOpen";
 import { OpenState } from "./States/CBOpen";
 import { CircuitBreakerConfig } from "./CircuitBreakerConfig";
 import { CircuitBreakerMetrics } from "./CircuitBreakerMetrics";
+import { CircuitBreakerState } from "./CircuitBreakerState";
 
-export interface CircuitBreakerState {
-  getState: () => Promise<State>;
-  setCurrentState: (state: State) => Promise<void>;
-
-  transitionToOpenState: () => Promise<void>;
-  transitionToClosedState: () => Promise<void>;
-  transitionToHalfOpenState: () => Promise<void>;
-}
-
-export class CircuitBreakerLocalState implements CircuitBreakerState {
+export class LocalState implements CircuitBreakerState {
   private currentState?: State;
   private closedState: ClosedState;
   private openState: OpenState;

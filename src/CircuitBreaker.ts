@@ -2,11 +2,9 @@ import {
   CircuitBreakerConfig,
   ICircuitBreakerConfig,
 } from "./CircuitBreakerConfig";
-import {
-  CircuitBreakerLocalState,
-  CircuitBreakerState,
-} from "./CircuitBreakerLocalState";
+import { LocalState } from "./LocalState";
 import { CircuitBreakerMetrics } from "./CircuitBreakerMetrics";
+import { CircuitBreakerState } from "./CircuitBreakerState";
 
 export class CircuitBreaker {
   readonly config: CircuitBreakerConfig;
@@ -16,10 +14,7 @@ export class CircuitBreaker {
   constructor(configOptions: ICircuitBreakerConfig) {
     this.config = new CircuitBreakerConfig(configOptions);
     this.metrics = new CircuitBreakerMetrics(this.config);
-    this.currentStateManager = new CircuitBreakerLocalState(
-      this.config,
-      this.metrics
-    );
+    this.currentStateManager = new LocalState(this.config, this.metrics);
   }
 
   async exec(cb: Function) {
