@@ -1,12 +1,12 @@
 import { EventEmitter } from "events";
 
-import { State } from "./States/State";
-import { ClosedState } from "./States/CBClosed";
-import { HalfOpenState } from "./States/CBHalfOpen";
-import { OpenState } from "./States/CBOpen";
-import { CircuitBreakerConfig } from "./CircuitBreakerConfig";
-import { CircuitBreakerMetrics } from "./CircuitBreakerMetrics";
-import { CircuitBreakerState } from "./CircuitBreakerState";
+import { State } from "./states/State";
+import { ClosedState } from "./states/Closed";
+import { HalfOpenState } from "./states/HalfOpen";
+import { OpenState } from "./states/Open";
+import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
+import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
+import { CircuitBreakerState } from "../CircuitBreakerState";
 
 export class LocalState implements CircuitBreakerState {
   private currentState?: State;

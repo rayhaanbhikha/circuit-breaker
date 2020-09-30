@@ -2,7 +2,7 @@ import {
   CircuitBreakerConfig,
   ICircuitBreakerConfig,
 } from "./CircuitBreakerConfig";
-import { LocalState } from "./LocalState";
+import { LocalState } from "./cb_state/LocalState";
 import { CircuitBreakerMetrics } from "./CircuitBreakerMetrics";
 import { CircuitBreakerState } from "./CircuitBreakerState";
 

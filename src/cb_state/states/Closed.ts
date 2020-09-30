@@ -1,9 +1,9 @@
-import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
-import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
+import { CircuitBreakerConfig } from "../../CircuitBreakerConfig";
+import { CircuitBreakerMetrics } from "../../CircuitBreakerMetrics";
 import { EventEmitter } from "events";
 
 import { State } from "./State";
-import { OPEN } from "./CBOpen";
+import { OPEN } from "./Open";
 
 export const CLOSED_STATE = "CLOSED";
 

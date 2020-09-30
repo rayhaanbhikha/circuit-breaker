@@ -1,4 +1,4 @@
-import { State } from "./States/State";
+import { State } from "./cb_state/states/State";
 
 export interface CircuitBreakerState {
   getState: () => Promise<State>;
