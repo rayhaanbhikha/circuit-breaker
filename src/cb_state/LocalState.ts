@@ -60,14 +60,10 @@ export class LocalState implements CircuitBreakerState {
     this.currentState.init();
   }
 
-  init() {
+  async getState() {
     if (!this.currentState) {
-      this.setCurrentState(this.closedState);
+      await this.setCurrentState(this.closedState);
     }
-  }
-
-  getState() {
-    this.init();
     return Promise.resolve(this.currentState as State);
   }
 
