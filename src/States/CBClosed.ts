@@ -1,12 +1,14 @@
 import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
-import { CircuitBreakerState } from "../CircuitBreakerState";
 import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
 import { EventEmitter } from "events";
 
 import { State } from "./State";
+import { OPEN } from "./CBOpen";
+
+export const CLOSED_STATE = "CLOSED";
 
 export class ClosedState implements State {
-  readonly state = "CLOSED";
+  readonly state = CLOSED_STATE;
   private config: CircuitBreakerConfig;
   private metrics: CircuitBreakerMetrics;
   private stel: EventEmitter;
@@ -29,17 +31,12 @@ export class ClosedState implements State {
     try {
       const res = await callback();
       this.metrics.recordSuccess();
-      if (this.checkIfCBshouldOpen()) {
-        console.log("helo");
-        this.stel.emit("TRANSITION_STATE", "OPEN");
-      }
+      if (this.checkIfCBshouldOpen()) this.stel.emit("TRANSITION_STATE", OPEN);
       return res;
     } catch (error) {
       // TODO: filter errors with options or status codes?
       this.metrics.recordError();
-      if (this.checkIfCBshouldOpen()) {
-        this.stel.emit("TRANSITION_STATE", "OPEN");
-      }
+      if (this.checkIfCBshouldOpen()) this.stel.emit("TRANSITION_STATE", OPEN);
 
       return this.config.fallback(error);
     }

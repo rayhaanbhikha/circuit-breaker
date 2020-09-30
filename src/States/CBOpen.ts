@@ -3,9 +3,12 @@ import { CircuitBreakerState } from "../CircuitBreakerState";
 import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
 import { State } from "./State";
 import { EventEmitter } from "events";
+import { HALF_OPEN } from "./CBHalfOpen";
+
+export const OPEN = "OPEN";
 
 export class OpenState implements State {
-  readonly state = "OPEN";
+  readonly state = OPEN;
   private config: CircuitBreakerConfig;
   private metrics: CircuitBreakerMetrics;
   private stel: EventEmitter;
@@ -26,7 +29,7 @@ export class OpenState implements State {
 
   startTimerToHalfOpenState() {
     setTimeout(() => {
-      this.stel.emit("TRANSITION_STATE", "HALF_OPEN");
+      this.stel.emit("TRANSITION_STATE", HALF_OPEN);
     }, this.config.waitDurationInOpenState);
   }
 

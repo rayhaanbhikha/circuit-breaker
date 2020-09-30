@@ -40,7 +40,6 @@ export class LocalState implements CircuitBreakerState {
     this.stateTransitionEventListener.on(
       "TRANSITION_STATE",
       async (state: string) => {
-        console.log("STATE EMITTED: ", state);
         switch (state) {
           case this.closedState.state:
             await this.transitionToClosedState();
