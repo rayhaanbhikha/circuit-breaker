@@ -6,7 +6,7 @@ import { HalfOpenState } from "./states/HalfOpen";
 import { OpenState } from "./states/Open";
 import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
 import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
-import { CircuitBreakerState } from "../CircuitBreakerState";
+import { CircuitBreakerState } from "./CircuitBreakerState";
 
 export class LocalState implements CircuitBreakerState {
   private currentState?: State;

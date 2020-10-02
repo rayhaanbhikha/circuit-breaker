@@ -1,0 +1,7 @@
+version: "3.7"
+
+services:
+  circuit-breaker-multi-node-cache:
+    image: redis:alpine
+    ports:
+      - 6379:6379

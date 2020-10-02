@@ -1,5 +1,5 @@
 import { CircuitBreakerConfig } from "../../CircuitBreakerConfig";
-import { CircuitBreakerState } from "../../CircuitBreakerState";
+import { CircuitBreakerState } from "../CircuitBreakerState";
 import { CircuitBreakerMetrics } from "../../CircuitBreakerMetrics";
 import { State } from "./State";
 import { EventEmitter } from "events";

@@ -10,3 +10,18 @@
 // setState function will need to update redis as well statemachine.
 
 // Redis will be used as source of truth.
+
+// will need an extra state to check if current CB was broken due to values in cache.
+
+
+// Redis
+
+key:                  
+downstream_service
+
+value:
+
+{
+  <unique_node_id> = <state>:<last
+}
+

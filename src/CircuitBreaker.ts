@@ -4,7 +4,7 @@ import {
 } from "./CircuitBreakerConfig";
 import { LocalState } from "./cb_state/LocalState";
 import { CircuitBreakerMetrics } from "./CircuitBreakerMetrics";
-import { CircuitBreakerState } from "./CircuitBreakerState";
+import { CircuitBreakerState } from "./cb_state/CircuitBreakerState";
 
 export class CircuitBreaker {
   readonly config: CircuitBreakerConfig;
