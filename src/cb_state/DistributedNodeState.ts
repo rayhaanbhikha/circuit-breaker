@@ -1,7 +1,7 @@
 export interface IDistributedNodeState {
   localState: string;
   lastContact: number;
-  LastLocallyBrokenUntil?: number;
+  lastLocallyBrokenUntil: number;
 }
 
 export const unmarshallNodeState = (nodeState: string) => {
@@ -10,12 +10,12 @@ export const unmarshallNodeState = (nodeState: string) => {
   );
   return {
     localState,
-    lastContact,
-    lastLocallyBrokenUntil,
+    lastContact: Number(lastContact),
+    lastLocallyBrokenUntil: Number(lastLocallyBrokenUntil),
   };
 };
 
 export const marshallNodeState = (nodeState: IDistributedNodeState) => {
-  const { localState, lastContact, LastLocallyBrokenUntil } = nodeState;
-  return `${localState}:${lastContact}:${LastLocallyBrokenUntil}`;
+  const { localState, lastContact, lastLocallyBrokenUntil } = nodeState;
+  return `${localState}:${lastContact}:${lastLocallyBrokenUntil}`;
 };

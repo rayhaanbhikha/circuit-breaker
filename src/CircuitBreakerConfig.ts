@@ -1,4 +1,5 @@
 export interface ICircuitBreakerConfig {
+  downstreamServiceKey: string;
   failureRateThreshold: number;
   // slowCallRateThreshold
   // slowCallDurationThreshold
@@ -22,7 +23,9 @@ export class CircuitBreakerConfig {
   readonly slidingWindowSize: number;
   readonly minimumNumberOfCalls: number;
   readonly waitDurationInOpenState: number;
+  readonly downstreamServiceKey: string;
   constructor(config: ICircuitBreakerConfig) {
+    this.downstreamServiceKey = config.downstreamServiceKey;
     this.failureRateThreshold = config.failureRateThreshold;
     this.permittedNumberOfCallsInHalfOpenState =
       config.permittedNumberOfCallsInHalfOpenState;

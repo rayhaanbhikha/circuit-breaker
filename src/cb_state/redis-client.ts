@@ -36,13 +36,11 @@ export class RedisClient {
 
   async getDistributedNodeStates(downstreamService: string) {
     const nodeStates = await this.redis.hgetall(downstreamService);
-    return Object.entries(nodeStates).reduce(
-      (accNodeStates, [nodeId, nodeState]) => ({
-        ...accNodeStates,
-        [nodeId]: unmarshallNodeState(nodeState),
-      }),
-      {}
-    );
+    const unmarshalledNodeStates = {} as Record<string, IDistributedNodeState>;
+    for (const [nodeId, nodeState] of Object.entries(nodeStates)) {
+      unmarshalledNodeStates[nodeId] = unmarshallNodeState(nodeState);
+    }
+    return unmarshalledNodeStates;
   }
 
   quit() {
@@ -58,7 +56,7 @@ export class RedisClient {
 //     db.updateNodeState(downstreamService, nodeId, {
 //       localState: "OPEN",
 //       lastContact: Date.now(),
-//       LastLocallyBrokenUntil: Date.now() + 5 * 60 * 60 * 1000,
+//       lastLocallyBrokenUntil: Date.now() + 5 * 60 * 60 * 1000,
 //     });
 //     // const res = await db.getNodeStateById(downstreamService, nodeId);
 //     // console.log(res);
