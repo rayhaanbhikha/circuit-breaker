@@ -9,7 +9,7 @@ import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
 import { CircuitBreakerState } from "./CircuitBreakerState";
 
 export class LocalState implements CircuitBreakerState {
-  private currentState?: State;
+  private currentState: State;
   private closedState: ClosedState;
   private openState: OpenState;
   private halfOpenState: HalfOpenState;
@@ -34,6 +34,8 @@ export class LocalState implements CircuitBreakerState {
     );
 
     this.setEventListeners();
+    this.currentState = this.closedState;
+    this.currentState.init();
   }
 
   setEventListeners() {
@@ -55,15 +57,12 @@ export class LocalState implements CircuitBreakerState {
     );
   }
 
-  async setCurrentState(newState: State) {
+  setCurrentState(newState: State) {
     this.currentState = newState;
     this.currentState.init();
   }
 
   async getState() {
-    if (!this.currentState) {
-      await this.setCurrentState(this.closedState);
-    }
     return Promise.resolve(this.currentState as State);
   }
 
