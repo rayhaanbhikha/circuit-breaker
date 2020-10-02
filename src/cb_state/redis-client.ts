@@ -1,6 +1,11 @@
 import Redis, { RedisOptions } from "ioredis";
+import {
+  IDistributedNodeState,
+  marshallNodeState,
+  unmarshallNodeState,
+} from "./DistributedNodeState";
 
-class RedisClient {
+export class RedisClient {
   private redis: Redis.Redis;
   constructor(options?: RedisOptions) {
     // TODO: redis client should be passed through.
@@ -11,12 +16,33 @@ class RedisClient {
     this.redis.on("error", (err) => console.log(err));
   }
 
-  setService(downstreamService: string, nodeId: string, value: string) {
-    return this.redis.hset(downstreamService, nodeId, value);
+  updateNodeState(
+    downstreamService: string,
+    nodeId: string,
+    nodeState: IDistributedNodeState
+  ) {
+    const state = marshallNodeState(nodeState);
+    return this.redis.hset(downstreamService, nodeId, state);
   }
 
-  getServiceByNodeId(downstreamService: string, nodeId: string) {
-    return this.redis.hget(downstreamService, nodeId);
+  async getNodeStateById(downstreamService: string, nodeId: string) {
+    const state = await this.redis.hget(downstreamService, nodeId);
+    if (state) {
+      return unmarshallNodeState(state);
+    } else {
+      return null;
+    }
+  }
+
+  async getDistributedNodeStates(downstreamService: string) {
+    const nodeStates = await this.redis.hgetall(downstreamService);
+    return Object.entries(nodeStates).reduce(
+      (accNodeStates, [nodeId, nodeState]) => ({
+        ...accNodeStates,
+        [nodeId]: unmarshallNodeState(nodeState),
+      }),
+      {}
+    );
   }
 
   quit() {
@@ -24,17 +50,23 @@ class RedisClient {
   }
 }
 
-(async () => {
-  try {
-    const db = new RedisClient();
-    const downstreamService = "some_service";
-    const nodeId = "node_1";
-    db.setService(downstreamService, nodeId, `OPEN:${new Date()}`);
-    const res = await db.getServiceByNodeId(downstreamService, nodeId);
-    console.log(res);
-    db.quit();
-    return;
-  } catch (error) {
-    console.error(error);
-  }
-})();
+// (async () => {
+//   try {
+//     const db = new RedisClient();
+//     const downstreamService = "some_service";
+//     const nodeId = "node_1";
+//     db.updateNodeState(downstreamService, nodeId, {
+//       localState: "OPEN",
+//       lastContact: Date.now(),
+//       LastLocallyBrokenUntil: Date.now() + 5 * 60 * 60 * 1000,
+//     });
+//     // const res = await db.getNodeStateById(downstreamService, nodeId);
+//     // console.log(res);
+
+//     console.log(await db.getDistributedNodeStates(downstreamService));
+//     db.quit();
+//     return;
+//   } catch (error) {
+//     console.error(error);
+//   }
+// })();
