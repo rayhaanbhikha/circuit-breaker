@@ -41,17 +41,14 @@ export class LocalState implements CircuitBreakerState {
   setEventListeners() {
     this.stateTransitionEventListener.on(
       "TRANSITION_STATE",
-      async (state: string) => {
+      (state: string) => {
         switch (state) {
           case this.closedState.state:
-            await this.transitionToClosedState();
-            return;
+            return this.setCurrentState(this.closedState);
           case this.openState.state:
-            await this.transitionToOpenState();
-            return;
+            return this.setCurrentState(this.openState);
           case this.halfOpenState.state:
-            await this.transitionToHalfOpenState();
-            return;
+            return this.setCurrentState(this.halfOpenState);
         }
       }
     );
@@ -64,20 +61,5 @@ export class LocalState implements CircuitBreakerState {
 
   async getState() {
     return Promise.resolve(this.currentState as State);
-  }
-
-  async transitionToOpenState() {
-    console.log("TRANSITIONED TO ---->>>> OPEN STATE");
-    return this.setCurrentState(this.openState);
-  }
-
-  async transitionToClosedState() {
-    console.log("TRANSITIONED TO ---->>>> CLOSED STATE");
-    return this.setCurrentState(this.closedState);
-  }
-
-  async transitionToHalfOpenState() {
-    console.log("TRANSITIONED TO ---->>>> HALF_OPEN STATE");
-    return this.setCurrentState(this.halfOpenState);
   }
 }
