@@ -7,6 +7,7 @@ describe("LOCAL Circuit breaker", () => {
     jest.useFakeTimers();
 
     cb = new CircuitBreaker({
+      downstreamServiceKey: "SOME_SERVICE",
       failureRateThreshold: 50,
       waitDurationInOpenState: 10_000,
       permittedNumberOfCallsInHalfOpenState: 10,
