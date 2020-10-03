@@ -30,7 +30,7 @@ export class OpenState implements State {
   startTimerToHalfOpenState() {
     setTimeout(() => {
       this.stel.emit("TRANSITION_STATE", HALF_OPEN);
-    }, this.config.waitDurationInOpenState);
+    }, this.config.waitDurationInOpenState); // TODO: should useBackOff algorithm.
   }
 
   async exec(cb: Function) {
