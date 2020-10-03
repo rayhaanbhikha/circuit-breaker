@@ -1,5 +1,8 @@
 export interface ICircuitBreakerConfig {
+  // distributed cb state config
   downstreamServiceKey: string;
+  nodeId: string;
+
   failureRateThreshold: number;
   // slowCallRateThreshold
   // slowCallDurationThreshold
@@ -24,7 +27,9 @@ export class CircuitBreakerConfig {
   readonly minimumNumberOfCalls: number;
   readonly waitDurationInOpenState: number;
   readonly downstreamServiceKey: string;
+  readonly nodeId: string;
   constructor(config: ICircuitBreakerConfig) {
+    this.nodeId = config.nodeId;
     this.downstreamServiceKey = config.downstreamServiceKey;
     this.failureRateThreshold = config.failureRateThreshold;
     this.permittedNumberOfCallsInHalfOpenState =

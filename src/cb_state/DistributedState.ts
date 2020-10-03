@@ -16,10 +16,13 @@ export class DistributedState implements CircuitBreakerState {
   private openState: OpenState;
   private halfOpenState: HalfOpenState;
 
+  private distributedBroken = false;
   private stateTransitionEventListener = new EventEmitter();
   private redisClient: RedisClient;
+  private config: CircuitBreakerConfig;
 
   constructor(config: CircuitBreakerConfig, metrics: CircuitBreakerMetrics) {
+    this.config = config;
     this.closedState = new ClosedState(
       config,
       metrics,
@@ -47,97 +50,92 @@ export class DistributedState implements CircuitBreakerState {
     this.stateTransitionEventListener.on(
       "TRANSITION_STATE",
       async (state: string) => {
+        // TODO: error handling.
         switch (state) {
           case this.closedState.state:
-            await this.transitionToClosedState();
+            this.setLocalState(this.closedState);
+            await this.setRemoteState(this.closedState);
             return;
           case this.openState.state:
-            await this.transitionToOpenState();
+            this.distributedBroken = false;
+            this.setLocalState(this.openState);
+            await this.setRemoteState(this.openState);
             return;
           case this.halfOpenState.state:
-            await this.transitionToHalfOpenState();
+            this.setLocalState(this.halfOpenState);
+            await this.setRemoteState(this.halfOpenState);
             return;
         }
       }
     );
   }
 
-  async setCurrentState(newState: State) {
+  setLocalState(newState: State) {
     this.localState = newState;
     this.localState.init();
+  }
 
+  async setRemoteState(newState: State) {
+    // TODO: use date-fns
     const nodeState: IDistributedNodeState = {
-      localState: this.localState.state,
+      localState: newState.state,
       lastContact: Date.now(),
       lastLocallyBrokenUntil:
-        this.localState.state === this.closedState.state
-          ? 5 * 60 * 60 * 1000
+        newState.state === this.openState.state
+          ? this.config.waitDurationInOpenState
           : 0,
     };
     await this.redisClient.updateNodeState(
-      "SOME_SERVICE",
-      "NODE_ID_1",
+      this.config.downstreamServiceKey,
+      this.config.nodeId,
       nodeState
     );
   }
 
   async getState() {
     const nodeStates = await this.redisClient.getDistributedNodeStates(
-      "SOME_SERVICE"
+      this.config.downstreamServiceKey
     );
 
     if (!nodeStates) {
-      await this.setCurrentState(this.closedState);
-    }
-
-    const shouldBreak = shouldDistributeBreak(nodeStates);
-
-    // currentstate is open + localstate is open
-    if ((shouldBreak && this.localState.state === "OPEN") || "HALF_OPEN") {
+      await this.setRemoteState(this.localState);
       return Promise.resolve(this.localState as State);
     }
 
-    // currentState is open + localstate is closed
-    if (shouldBreak && this.localState.state === "CLOSED") {
-      // check why it was broken the last time.
-      if(brokenlastTime)
+    const shouldBreak = this.shouldDistributeBreak(nodeStates);
+
+    if (!shouldBreak || this.distributedBroken) {
+      return Promise.resolve(this.localState as State);
     }
 
-    // quorum logic to decide new localstate.
+    this.distributedBroken = true;
+
+    // Do we need to check remote state or is local state enough?
+    if (this.localState.state === this.closedState.state) {
+      this.setLocalState(this.openState);
+      await this.setRemoteState(this.openState);
+    }
+
     return Promise.resolve(this.localState as State);
   }
 
-  async transitionToOpenState() {
-    console.log("TRANSITIONED TO ---->>>> OPEN STATE");
-    return this.setCurrentState(this.openState);
-  }
+  // if minimum N nodes locally broken.
+  shouldDistributeBreak(
+    distributedNodeState: Record<string, IDistributedNodeState>
+  ) {
+    let numOfDistributedNodeStatesBroken = 0;
+    for (const [_, nodeState] of Object.entries(distributedNodeState)) {
+      if (
+        // TODO: note all these checks should be configurable.
+        nodeState.localState === "OPEN" && // state is open
+        nodeState.lastLocallyBrokenUntil > Date.now() && // state is currently still open
+        nodeState.lastContact < Date.now() - 1 * 60 * 1000 // state was in contact within 5mins.
+      )
+        numOfDistributedNodeStatesBroken++;
+    }
 
-  async transitionToClosedState() {
-    console.log("TRANSITIONED TO ---->>>> CLOSED STATE");
-    return this.setCurrentState(this.closedState);
+    // however many nodes.
+    // TODO: use percentage value here.
+    return numOfDistributedNodeStatesBroken >= 3;
   }
-
-  async transitionToHalfOpenState() {
-    console.log("TRANSITIONED TO ---->>>> HALF_OPEN STATE");
-    return this.setCurrentState(this.halfOpenState);
-  }
-}
-
-// if minimum N nodes locally broken.
-function shouldDistributeBreak(
-  distributedNodeState: Record<string, IDistributedNodeState>
-) {
-  let numOfDistributedNodeStatesBroken = 0;
-  for (const [_, nodeState] of Object.entries(distributedNodeState)) {
-    if (
-      // TODO: note all these checks should be configurable.
-      nodeState.localState === "OPEN" && // state is open
-      nodeState.lastLocallyBrokenUntil > Date.now() && // state is currently still open
-      nodeState.lastContact < Date.now() - 1 * 60 * 60 * 1000 // state was in contact within 60 mins.
-    )
-      numOfDistributedNodeStatesBroken++;
-  }
-
-  // however many nodes.
-  return numOfDistributedNodeStatesBroken >= 3;
 }
