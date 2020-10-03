@@ -25,3 +25,9 @@ value:
   <unique_node_id> = <state>:<last
 }
 
+
+
+
+record errors when timeouts over threshold occur and error codes returning 5XX.
+timer to half open using exponential backoff.
+Disabled and ForcedOpen states.
