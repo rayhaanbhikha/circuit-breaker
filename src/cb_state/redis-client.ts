@@ -47,24 +47,3 @@ export class RedisClient {
     this.redis.quit();
   }
 }
-
-// (async () => {
-//   try {
-//     const db = new RedisClient();
-//     const downstreamService = "some_service";
-//     const nodeId = "node_1";
-//     db.updateNodeState(downstreamService, nodeId, {
-//       localState: "OPEN",
-//       lastContact: Date.now(),
-//       lastLocallyBrokenUntil: Date.now() + 5 * 60 * 60 * 1000,
-//     });
-//     // const res = await db.getNodeStateById(downstreamService, nodeId);
-//     // console.log(res);
-
-//     console.log(await db.getDistributedNodeStates(downstreamService));
-//     db.quit();
-//     return;
-//   } catch (error) {
-//     console.error(error);
-//   }
-// })();
