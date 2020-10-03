@@ -4,7 +4,7 @@ export interface ICircuitBreakerConfig {
      * Configures the percentage of open circuits allowed before a distributed circuit break.
      * @example 50
      */
-    openCircuitsThreshold: string;
+    openCircuitsThreshold: number;
     /**
      * Configures the name of the distributed circuit to represent the downstream service this circuit will protect.
      * @example "some_service"
@@ -62,11 +62,17 @@ export class CircuitBreakerConfig {
   readonly slidingWindowSize: number;
   readonly minimumNumberOfCalls: number;
   readonly waitDurationInOpenState: number;
+
   readonly distributedCircuitKey: string;
   readonly nodeId: string;
+  readonly openCircuitsThreshold: number;
+
   constructor(config: ICircuitBreakerConfig) {
-    this.nodeId = config.nodeId;
-    this.distributedCircuitKey = config.distributedCircuitKey;
+    this.nodeId = config.distributedStateConfig?.nodeId || "";
+    this.distributedCircuitKey =
+      config.distributedStateConfig?.distributedCircuitKey || "";
+    this.openCircuitsThreshold =
+      config.distributedStateConfig?.openCircuitsThreshold || 50;
     this.failureRateThreshold = config.failureRateThreshold;
     this.permittedNumberOfCallsInHalfOpenState =
       config.permittedNumberOfCallsInHalfOpenState;
@@ -74,7 +80,6 @@ export class CircuitBreakerConfig {
     this.minimumNumberOfCalls =
       config.minimumNumberOfCalls || this.slidingWindowSize;
     this.waitDurationInOpenState = config.waitDurationInOpenState;
-    this.fallbackFunc = config.fallback;
   }
 
   fallback(error?: Error) {
