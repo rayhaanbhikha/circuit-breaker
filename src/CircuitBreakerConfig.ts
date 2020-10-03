@@ -1,7 +1,22 @@
 export interface ICircuitBreakerConfig {
-  // distributed cb state config
-  downstreamServiceKey: string;
-  nodeId: string;
+  distributedStateConfig?: {
+    /**
+     * Configures the percentage of open circuits allowed before a distributed circuit break.
+     * @example 50
+     */
+    openCircuitsThreshold: string;
+    /**
+     * Configures the name of the distributed circuit to represent the downstream service this circuit will protect.
+     * @example "some_service"
+     */
+    distributedCircuitKey: string;
+    /**
+     * FIXME: might be something done automatically by the library.
+     * Configures a unique identifier for the node
+     * @example "some-id"
+     */
+    nodeId: string;
+  };
 
   /**
    * Configures the failure rate threshold in percentage. When the failure rate is equal or greater than the threshold the CircuitBreaker transitions to open and starts short-circuiting calls.
@@ -29,13 +44,13 @@ export interface ICircuitBreakerConfig {
    */
   minimumNumberOfCalls?: number;
   /**
-   * The time in milliseconds that the CircuitBreaker should wait before transitioning from open to half-open.
+   * Configures the time in milliseconds the CircuitBreaker should wait before transitioning from open to half-open.
    * @example 60000
    */
   waitDurationInOpenState: number;
 
   /**
-   * The fallback function to invoke if the circuit breaker is open or if an error occurs.
+   * Configures the fallback function to invoke if the circuit breaker is open or if an error occurs.
    */
   fallback?: (err: Error) => any;
 }
@@ -47,11 +62,11 @@ export class CircuitBreakerConfig {
   readonly slidingWindowSize: number;
   readonly minimumNumberOfCalls: number;
   readonly waitDurationInOpenState: number;
-  readonly downstreamServiceKey: string;
+  readonly distributedCircuitKey: string;
   readonly nodeId: string;
   constructor(config: ICircuitBreakerConfig) {
     this.nodeId = config.nodeId;
-    this.downstreamServiceKey = config.downstreamServiceKey;
+    this.distributedCircuitKey = config.distributedCircuitKey;
     this.failureRateThreshold = config.failureRateThreshold;
     this.permittedNumberOfCallsInHalfOpenState =
       config.permittedNumberOfCallsInHalfOpenState;

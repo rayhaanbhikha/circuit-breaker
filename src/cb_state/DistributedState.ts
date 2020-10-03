@@ -9,6 +9,13 @@ import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
 import { CircuitBreakerState } from "./CircuitBreakerState";
 import { RedisClient } from "./redis-client";
 import { IDistributedNodeState } from "./DistributedNodeState";
+import {
+  addMilliseconds,
+  getUnixTime,
+  isAfter,
+  isWithinInterval,
+  subMilliseconds,
+} from "date-fns";
 
 export class DistributedState implements CircuitBreakerState {
   private localState: State;
@@ -76,17 +83,19 @@ export class DistributedState implements CircuitBreakerState {
   }
 
   async setRemoteState(newState: State) {
-    // TODO: use date-fns
+    const currentDate = new Date();
     const nodeState: IDistributedNodeState = {
       localState: newState.state,
-      lastContact: Date.now(),
+      lastContact: getUnixTime(currentDate),
       lastLocallyBrokenUntil:
         newState.state === this.openState.state
-          ? this.config.waitDurationInOpenState
+          ? getUnixTime(
+              addMilliseconds(currentDate, this.config.waitDurationInOpenState)
+            )
           : 0,
     };
     await this.redisClient.updateNodeState(
-      this.config.downstreamServiceKey,
+      this.config.distributedCircuitKey,
       this.config.nodeId,
       nodeState
     );
@@ -94,7 +103,7 @@ export class DistributedState implements CircuitBreakerState {
 
   async getState() {
     const nodeStates = await this.redisClient.getDistributedNodeStates(
-      this.config.downstreamServiceKey
+      this.config.distributedCircuitKey
     );
 
     if (!nodeStates) {
@@ -125,11 +134,15 @@ export class DistributedState implements CircuitBreakerState {
   ) {
     let numOfDistributedNodeStatesBroken = 0;
     for (const [_, nodeState] of Object.entries(distributedNodeState)) {
+      const date = Date.now();
       if (
         // TODO: note all these checks should be configurable.
         nodeState.localState === "OPEN" && // state is open
-        nodeState.lastLocallyBrokenUntil > Date.now() && // state is currently still open
-        nodeState.lastContact < Date.now() - 1 * 60 * 1000 // state was in contact within 5mins.
+        isAfter(nodeState.lastLocallyBrokenUntil, new Date()) && // state is currently still open
+        isWithinInterval(nodeState.lastContact, {
+          start: subMilliseconds(date, 1 * 60 * 1000),
+          end: date,
+        })
       )
         numOfDistributedNodeStatesBroken++;
     }
