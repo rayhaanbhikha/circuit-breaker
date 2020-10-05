@@ -3,6 +3,7 @@ import axios from "axios";
 
 import { CircuitBreaker } from "../src/CircuitBreaker";
 import { CallsNotPermittedException } from "../src/Exceptions/CallsNotPermittedException";
+import { Time } from "../src/time";
 
 const resourceURL = "http://localhost:8000";
 
@@ -15,7 +16,7 @@ describe("LOCAL Circuit breaker", () => {
 
   nock(resourceURL).get("/success").reply(200, "resource found").persist();
   nock(resourceURL).get("/error").reply(500, "internal server error").persist();
-  nock(resourceURL).get("/timeout").delay(20_000).reply(200);
+  // nock(resourceURL).get("/timeout").delay(1_000).reply(200).persist();
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -25,6 +26,8 @@ describe("LOCAL Circuit breaker", () => {
       waitDurationInOpenState: 10_000,
       permittedNumberOfCallsInHalfOpenState: 10,
       slidingWindowSize: 20,
+      slowCallDurationThreshold: 3_000,
+      slowCallRateThreshold: 10,
     });
   });
 
@@ -64,5 +67,46 @@ describe("LOCAL Circuit breaker", () => {
     );
   });
 
-  // should transition circuit breaker to OPEN state if calls timeout
+  describe("Slow Requests", () => {
+    it("should transition circuit breaker to OPEN state if calls timeout", async () => {
+      const { state: prevState } = await cb.currentStateManager.getState();
+      expect(prevState).toEqual("CLOSED");
+
+      for (let i = 0; i < 20; i++) {
+        jest.spyOn(Time, "differenceInMilliseconds").mockReturnValue(5_000);
+        await cb.exec(successfulAPICall);
+      }
+
+      const { state } = await cb.currentStateManager.getState();
+      expect(state).toEqual("OPEN");
+    });
+
+    it.only("should transition circuit breaker from OPEN -> HALF_OPEN -> OPEN", async () => {
+      const { state: prevState } = await cb.currentStateManager.getState();
+      expect(prevState).toEqual("CLOSED");
+
+      for (let i = 0; i < 20; i++) {
+        jest.spyOn(Time, "differenceInMilliseconds").mockReturnValue(5_000);
+        await cb.exec(successfulAPICall);
+      }
+
+      const { state } = await cb.currentStateManager.getState();
+      expect(state).toEqual("OPEN");
+
+      jest.runTimersToTime(10_000);
+
+      const {
+        state: intermiediatteState,
+      } = await cb.currentStateManager.getState();
+      expect(intermiediatteState).toEqual("HALF_OPEN");
+
+      for (let i = 0; i < 20; i++) {
+        jest.spyOn(Time, "differenceInMilliseconds").mockReturnValue(5_000);
+        await cb.exec(successfulAPICall);
+      }
+
+      const { state: finalState } = await cb.currentStateManager.getState();
+      expect(finalState).toEqual("OPEN");
+    });
+  });
 });

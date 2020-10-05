@@ -25,8 +25,19 @@ export interface ICircuitBreakerConfig {
    * @example 50
    */
   failureRateThreshold: number;
-  // TODO: slowCallRateThreshold
-  // TODO: slowCallDurationThreshold
+
+  /**
+   * Configures a threshold in percentage. The CircuitBreaker considers a call as slow when the call duration is greater than slowCallDurationThreshold
+   * @example 100
+   */
+  slowCallRateThreshold: number;
+
+  /**
+   * Configures the duration threshold (in ms) above which calls are considered as slow and increase the rate of slow calls.
+   *
+   * @example 60000 [ms]
+   */
+  slowCallDurationThreshold: number;
 
   /**
    * Configures the number of permitted calls when the CircuitBreaker is half open.
@@ -64,6 +75,8 @@ export class CircuitBreakerConfig {
   readonly slidingWindowSize: number;
   readonly minimumNumberOfCalls: number;
   readonly waitDurationInOpenState: number;
+  readonly slowCallRateThreshold: number;
+  readonly slowCallDurationThreshold: number;
 
   readonly distributedCircuitKey: string;
   readonly nodeId: string;
@@ -76,6 +89,8 @@ export class CircuitBreakerConfig {
     this.openCircuitsThreshold =
       config.distributedStateConfig?.openCircuitsThreshold || 50;
     this.failureRateThreshold = config.failureRateThreshold;
+    this.slowCallRateThreshold = config.slowCallRateThreshold;
+    this.slowCallDurationThreshold = config.slowCallDurationThreshold;
     this.permittedNumberOfCallsInHalfOpenState =
       config.permittedNumberOfCallsInHalfOpenState;
     this.slidingWindowSize = config.slidingWindowSize;

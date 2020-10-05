@@ -24,18 +24,26 @@ export class ClosedState implements State {
   }
 
   init() {
-    this.metrics.resetSlidingWindow(this.config.slidingWindowSize);
+    this.metrics.resetSlidingWindows(this.config.slidingWindowSize);
   }
 
   async exec(callback: Function) {
     try {
+      this.metrics.recordRequestStartTime();
+
       const res = await callback();
+
       this.metrics.recordSuccess();
+      this.metrics.recordRequestEndTime();
+
       if (this.checkIfCBshouldOpen()) this.stel.emit("TRANSITION_STATE", OPEN);
+
       return res;
     } catch (error) {
       // TODO: filter errors with options or status codes?
       this.metrics.recordError();
+      this.metrics.recordRequestEndTime();
+
       if (this.checkIfCBshouldOpen()) this.stel.emit("TRANSITION_STATE", OPEN);
 
       return this.config.fallback(error);
@@ -44,8 +52,8 @@ export class ClosedState implements State {
 
   checkIfCBshouldOpen() {
     return (
-      this.metrics.isSlidingWindowFull() &&
-      this.metrics.hasExceededErrorThreshold()
+      this.metrics.hasExceededErrorThreshold() ||
+      this.metrics.hasExceededSlowRateThreshold()
     );
   }
 }

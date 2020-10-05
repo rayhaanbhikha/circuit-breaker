@@ -24,36 +24,47 @@ export class HalfOpenState implements State {
   }
 
   init() {
-    this.metrics.resetSlidingWindow(
+    this.metrics.resetSlidingWindows(
       this.config.permittedNumberOfCallsInHalfOpenState
     );
   }
 
   async exec(callback: Function) {
     try {
+      this.metrics.recordRequestStartTime();
+
       const res = await callback();
+
       this.metrics.recordSuccess();
+      this.metrics.recordRequestEndTime();
 
       if (this.isReadyToCloseCB())
         this.stel.emit("TRANSITION_STATE", CLOSED_STATE);
 
+      if (this.isReadyToOpenCB()) this.stel.emit("TRANSITION_STATE", OPEN);
+
       return res;
     } catch (error) {
       this.metrics.recordError();
-      if (
-        this.metrics.isSlidingWindowFull() &&
-        this.metrics.hasExceededErrorThreshold()
-      )
-        this.stel.emit("TRANSITION_STATE", OPEN);
+      this.metrics.recordRequestEndTime();
+
+      if (this.isReadyToOpenCB()) this.stel.emit("TRANSITION_STATE", OPEN);
 
       return this.config.fallback(error);
     }
   }
 
+  isReadyToOpenCB() {
+    return (
+      this.metrics.hasExceededErrorThreshold() ||
+      this.metrics.hasExceededSlowRateThreshold()
+    );
+  }
+
   isReadyToCloseCB() {
     return (
-      this.metrics.isSlidingWindowFull() &&
-      !this.metrics.hasExceededErrorThreshold()
+      !this.metrics.hasExceededErrorThreshold() &&
+      !this.metrics.hasExceededSlowRateThreshold()
     );
   }
 }
