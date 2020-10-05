@@ -1,3 +1,5 @@
+import { CallsNotPermittedException } from "./Exceptions/CallsNotPermittedException";
+
 export interface ICircuitBreakerConfig {
   distributedStateConfig?: {
     /**
@@ -84,12 +86,9 @@ export class CircuitBreakerConfig {
 
   fallback(error?: Error) {
     if (this.fallbackFunc) {
-      return this.fallbackFunc();
-    } else if (error) {
-      throw error;
-    } else {
-      // TODO: add custom error for this.
-      throw new Error("Fallback not configured");
+      return this.fallbackFunc(error);
     }
+
+    throw new CallsNotPermittedException(error?.message || "Circuit Open");
   }
 }
