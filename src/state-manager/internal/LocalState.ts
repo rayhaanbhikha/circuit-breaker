@@ -33,25 +33,23 @@ export class LocalState implements CircuitBreakerStateManager {
       this.stateTransitionEventListener
     );
 
-    this.setEventListeners();
+    this.stateTransitionEventListener.on(
+      "TRANSITION_STATE",
+      this.stateTransitionEventHandler
+    );
     this.currentState = this.closedState;
     this.currentState.init();
   }
 
-  setEventListeners() {
-    this.stateTransitionEventListener.on(
-      "TRANSITION_STATE",
-      (state: string) => {
-        switch (state) {
-          case CIRCUIT_BREAKER_STATES.CLOSED:
-            return this.setState(this.closedState);
-          case CIRCUIT_BREAKER_STATES.OPEN:
-            return this.setState(this.openState);
-          case CIRCUIT_BREAKER_STATES.HALF_OPEN:
-            return this.setState(this.halfOpenState);
-        }
-      }
-    );
+  private stateTransitionEventHandler(state: CIRCUIT_BREAKER_STATES) {
+    switch (state) {
+      case CIRCUIT_BREAKER_STATES.CLOSED:
+        return this.setState(this.closedState);
+      case CIRCUIT_BREAKER_STATES.OPEN:
+        return this.setState(this.openState);
+      case CIRCUIT_BREAKER_STATES.HALF_OPEN:
+        return this.setState(this.halfOpenState);
+    }
   }
 
   setState(newState: State) {

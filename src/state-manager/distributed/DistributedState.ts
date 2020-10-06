@@ -46,7 +46,10 @@ export class DistributedState implements CircuitBreakerStateManager {
     this.redisClient = new RedisClient();
     this.distributedStateArbiter = new DistributedStateArbiter(config);
 
-    this.setEventListeners();
+    this.stateTransitionEventListener.on(
+      "TRANSITION_STATE",
+      this.stateTransitionEventHandler
+    );
 
     this.localState = this.closedState;
     this.localState.init();
@@ -58,24 +61,19 @@ export class DistributedState implements CircuitBreakerStateManager {
   get nodeId() {
     return this.config.distributedState.nodeId;
   }
-
-  setEventListeners() {
-    this.stateTransitionEventListener.on(
-      "TRANSITION_STATE",
-      async (state: string) => {
-        // TODO: error handling.
-        switch (state) {
-          case CIRCUIT_BREAKER_STATES.CLOSED:
-            return this.setState(this.closedState);
-          case CIRCUIT_BREAKER_STATES.OPEN:
-            this.distributedBroken = false;
-            return this.setState(this.openState);
-          case CIRCUIT_BREAKER_STATES.HALF_OPEN:
-            return this.setState(this.halfOpenState);
-        }
-      }
-    );
+  
+  private async stateTransitionEventHandler(state: CIRCUIT_BREAKER_STATES) {
+    switch (state) {
+      case CIRCUIT_BREAKER_STATES.CLOSED:
+        return this.setState(this.closedState);
+      case CIRCUIT_BREAKER_STATES.OPEN:
+        this.distributedBroken = false;
+        return this.setState(this.openState);
+      case CIRCUIT_BREAKER_STATES.HALF_OPEN:
+        return this.setState(this.halfOpenState);
+    }
   }
+
 
   async setState(newState: State) {
     this.setLocalState(newState);
