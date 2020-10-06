@@ -74,14 +74,14 @@ describe("LOCAL Circuit breaker", () => {
 
       for (let i = 0; i < 20; i++) {
         jest.spyOn(Time, "differenceInMilliseconds").mockReturnValue(5_000);
-        await cb.exec(successfulAPICall);
+        await cb.exec(successfulAPICall).catch(() => {});
       }
 
       const { state } = await cb.currentStateManager.getState();
       expect(state).toEqual("OPEN");
     });
 
-    it.only("should transition circuit breaker from OPEN -> HALF_OPEN -> OPEN", async () => {
+    it("should transition circuit breaker from OPEN -> HALF_OPEN -> OPEN", async () => {
       const { state: prevState } = await cb.currentStateManager.getState();
       expect(prevState).toEqual("CLOSED");
 

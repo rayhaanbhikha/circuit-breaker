@@ -34,7 +34,6 @@ export class OpenState implements State {
   }
 
   async exec(cb: Function) {
-    console.log("CB currently open");
     return this.config.fallback();
   }
 }
