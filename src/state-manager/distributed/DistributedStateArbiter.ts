@@ -1,6 +1,7 @@
 import { IDistributedNodeState } from "./DistributedNodeState";
 import { isAfter, isWithinInterval, subMilliseconds } from "date-fns";
 import { CircuitBreakerConfig } from "../../CircuitBreakerConfig";
+import { Time } from "../../metrics/Time";
 
 export class DistributedStateArbiter {
   private config: CircuitBreakerConfig;
@@ -12,22 +13,32 @@ export class DistributedStateArbiter {
     distributedNodeStates: Record<string, IDistributedNodeState>
   ): boolean {
     let numOfDistributedNodeStatesBroken = 0;
+
+    const {
+      lastContactThreshold,
+      openCircuitsThreshold,
+    } = this.config.distributedState;
+
     for (const [_, nodeState] of Object.entries(distributedNodeStates)) {
-      const date = Date.now();
+      const currentTime = Time.getCurrentTime();
       if (
-        // TODO: note all these checks should be configurable.
-        nodeState.localState === "OPEN" && // state is open
-        isAfter(nodeState.lastLocallyBrokenUntil, new Date()) && // state is currently still open
+        nodeState.localState === "OPEN" &&
+        isAfter(nodeState.lastLocallyBrokenUntil, currentTime) &&
+        // make sure it was last contacted with some time limit.
         isWithinInterval(nodeState.lastContact, {
-          start: subMilliseconds(date, 1 * 60 * 1000),
-          end: date,
+          start: subMilliseconds(currentTime, lastContactThreshold),
+          end: currentTime,
         })
       )
         numOfDistributedNodeStatesBroken++;
     }
 
-    // however many nodes.
-    // TODO: use percentage value here.
-    return numOfDistributedNodeStatesBroken >= 3;
+    const proportionOfOpenCircuitBreakerStates = Math.floor(
+      (numOfDistributedNodeStatesBroken /
+        Object.entries(distributedNodeStates).length) *
+        100
+    );
+
+    return proportionOfOpenCircuitBreakerStates >= openCircuitsThreshold;
   }
 }

@@ -52,6 +52,13 @@ export class DistributedState implements CircuitBreakerStateManager {
     this.localState.init();
   }
 
+  get distributedCircuitKey() {
+    return this.config.distributedState.distributedCircuitKey;
+  }
+  get nodeId() {
+    return this.config.distributedState.nodeId;
+  }
+
   setEventListeners() {
     this.stateTransitionEventListener.on(
       "TRANSITION_STATE",
@@ -93,18 +100,20 @@ export class DistributedState implements CircuitBreakerStateManager {
           : 0,
     };
     await this.redisClient.updateNodeState(
-      this.config.distributedCircuitKey,
-      this.config.nodeId,
+      this.distributedCircuitKey,
+      this.nodeId,
       nodeState
     );
   }
 
   async getState() {
     const nodeStates = await this.redisClient.getDistributedNodeStates(
-      this.config.distributedCircuitKey
+      this.distributedCircuitKey
     );
 
-    if (!nodeStates) {
+    const currentNodeState = nodeStates[this.nodeId];
+
+    if (!nodeStates || !currentNodeState) {
       await this.setRemoteState(this.localState);
       return Promise.resolve(this.localState as State);
     }
@@ -119,9 +128,12 @@ export class DistributedState implements CircuitBreakerStateManager {
 
     this.distributedBroken = true;
 
-    // Do we need to check remote state or is local state enough?
     if (this.localState.state === this.closedState.state)
       await this.setState(this.openState);
+
+    // if out of sync treat local state as source of truth.
+    if (currentNodeState.localState !== this.localState.state)
+      await this.setState(this.localState);
 
     return Promise.resolve(this.localState as State);
   }

@@ -1,24 +1,31 @@
 import { CallsNotPermittedException } from "./exceptions/CallsNotPermittedException";
 
+export interface IDistributedStateConfig {
+  /**
+   * Configures the maximum delay in last contact by a given node before discarded from distributed state calculation.
+   * @example 600000 [ms]
+   */
+  lastContactThreshold: number;
+  /**
+   * Configures the percentage of open circuits allowed before a distributed circuit break.
+   * @example 50
+   */
+  openCircuitsThreshold: number;
+  /**
+   * Configures the name of the distributed circuit to represent the downstream service this circuit will protect.
+   * @example "some_service"
+   */
+  distributedCircuitKey: string;
+  /**
+   * FIXME: might be something done automatically by the library.
+   * Configures a unique identifier for the node
+   * @example "some-id"
+   */
+  nodeId: string;
+}
+
 export interface ICircuitBreakerConfig {
-  distributedStateConfig?: {
-    /**
-     * Configures the percentage of open circuits allowed before a distributed circuit break.
-     * @example 50
-     */
-    openCircuitsThreshold?: number;
-    /**
-     * Configures the name of the distributed circuit to represent the downstream service this circuit will protect.
-     * @example "some_service"
-     */
-    distributedCircuitKey: string;
-    /**
-     * FIXME: might be something done automatically by the library.
-     * Configures a unique identifier for the node
-     * @example "some-id"
-     */
-    nodeId: string;
-  };
+  distributedStateConfig?: IDistributedStateConfig;
 
   /**
    * Configures the failure rate threshold in percentage. When the failure rate is equal or greater than the threshold the CircuitBreaker transitions to open and starts short-circuiting calls.
@@ -78,9 +85,7 @@ export class CircuitBreakerConfig {
   readonly slowCallRateThreshold: number;
   readonly slowCallDurationThreshold: number;
 
-  readonly distributedCircuitKey: string;
-  readonly nodeId: string;
-  readonly openCircuitsThreshold: number;
+  readonly distributedState: IDistributedStateConfig;
 
   constructor(config: ICircuitBreakerConfig) {
     // TODO: use JOI validation for config.
@@ -91,11 +96,12 @@ export class CircuitBreakerConfig {
       }
     }
 
-    this.nodeId = config.distributedStateConfig?.nodeId || "";
-    this.distributedCircuitKey =
-      config.distributedStateConfig?.distributedCircuitKey || "";
-    this.openCircuitsThreshold =
-      config.distributedStateConfig?.openCircuitsThreshold || 50;
+    this.distributedState = config.distributedStateConfig || {
+      lastContactThreshold: 600_000,
+      distributedCircuitKey: "",
+      nodeId: "",
+      openCircuitsThreshold: 50,
+    };
 
     this.failureRateThreshold = config.failureRateThreshold || 50;
     this.slowCallRateThreshold = config.slowCallRateThreshold || 100;
