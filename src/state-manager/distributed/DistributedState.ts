@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { addMilliseconds, getUnixTime } from "date-fns";
 
 import { State } from "../../states/State";
 import { ClosedState } from "../../states/Closed";
@@ -9,13 +10,8 @@ import { CircuitBreakerMetrics } from "../../metrics/CircuitBreakerMetrics";
 import { CircuitBreakerStateManager } from "../CircuitBreakerStateManager";
 import { RedisClient } from "./RedisClient";
 import { IDistributedNodeState } from "./DistributedNodeState";
-import {
-  addMilliseconds,
-  getUnixTime,
-  isAfter,
-  isWithinInterval,
-  subMilliseconds,
-} from "date-fns";
+import { DistributedStateArbiter } from "./DistributedStateArbiter";
+import { Time } from "../../metrics/Time";
 
 export class DistributedState implements CircuitBreakerStateManager {
   private localState: State;
@@ -27,6 +23,8 @@ export class DistributedState implements CircuitBreakerStateManager {
   private stateTransitionEventListener = new EventEmitter();
   private redisClient: RedisClient;
   private config: CircuitBreakerConfig;
+
+  private distributedStateArbiter: DistributedStateArbiter;
 
   constructor(config: CircuitBreakerConfig, metrics: CircuitBreakerMetrics) {
     this.config = config;
@@ -46,6 +44,7 @@ export class DistributedState implements CircuitBreakerStateManager {
       this.stateTransitionEventListener
     );
     this.redisClient = new RedisClient();
+    this.distributedStateArbiter = new DistributedStateArbiter(config);
 
     this.setEventListeners();
 
@@ -83,7 +82,7 @@ export class DistributedState implements CircuitBreakerStateManager {
   }
 
   async setRemoteState(newState: State) {
-    const currentDate = new Date();
+    const currentDate = Time.getCurrentTime();
     const nodeState: IDistributedNodeState = {
       localState: newState.state,
       lastContact: getUnixTime(currentDate),
@@ -101,6 +100,11 @@ export class DistributedState implements CircuitBreakerStateManager {
     );
   }
 
+  async setState(newState: State) {
+    this.setLocalState(newState);
+    await this.setRemoteState(newState);
+  }
+
   async getState() {
     const nodeStates = await this.redisClient.getDistributedNodeStates(
       this.config.distributedCircuitKey
@@ -111,44 +115,20 @@ export class DistributedState implements CircuitBreakerStateManager {
       return Promise.resolve(this.localState as State);
     }
 
-    const shouldBreak = this.shouldDistributeBreak(nodeStates);
+    const shouldDistributedBreak = this.distributedStateArbiter.shouldDistributedBreak(
+      nodeStates
+    );
 
-    if (!shouldBreak || this.distributedBroken) {
+    if (!shouldDistributedBreak || this.distributedBroken) {
       return Promise.resolve(this.localState as State);
     }
 
     this.distributedBroken = true;
 
     // Do we need to check remote state or is local state enough?
-    if (this.localState.state === this.closedState.state) {
-      this.setLocalState(this.openState);
-      await this.setRemoteState(this.openState);
-    }
+    if (this.localState.state === this.closedState.state)
+      await this.setState(this.openState);
 
     return Promise.resolve(this.localState as State);
-  }
-
-  // if minimum N nodes locally broken.
-  shouldDistributeBreak(
-    distributedNodeState: Record<string, IDistributedNodeState>
-  ) {
-    let numOfDistributedNodeStatesBroken = 0;
-    for (const [_, nodeState] of Object.entries(distributedNodeState)) {
-      const date = Date.now();
-      if (
-        // TODO: note all these checks should be configurable.
-        nodeState.localState === "OPEN" && // state is open
-        isAfter(nodeState.lastLocallyBrokenUntil, new Date()) && // state is currently still open
-        isWithinInterval(nodeState.lastContact, {
-          start: subMilliseconds(date, 1 * 60 * 1000),
-          end: date,
-        })
-      )
-        numOfDistributedNodeStatesBroken++;
-    }
-
-    // however many nodes.
-    // TODO: use percentage value here.
-    return numOfDistributedNodeStatesBroken >= 3;
   }
 }
