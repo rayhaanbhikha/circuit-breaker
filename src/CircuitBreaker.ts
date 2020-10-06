@@ -2,14 +2,14 @@ import {
   CircuitBreakerConfig,
   ICircuitBreakerConfig,
 } from "./CircuitBreakerConfig";
-import { LocalState } from "./LocalState";
-import { CircuitBreakerMetrics } from "./CircuitBreakerMetrics";
-import { CircuitBreakerState } from "./CircuitBreakerState";
+import { LocalState } from "./state-manager/internal/LocalState";
+import { CircuitBreakerMetrics } from "./metrics/CircuitBreakerMetrics";
+import { CircuitBreakerStateManager } from "./state-manager/CircuitBreakerStateManager";
 
 export class CircuitBreaker {
   readonly config: CircuitBreakerConfig;
   readonly metrics: CircuitBreakerMetrics;
-  readonly currentStateManager: CircuitBreakerState;
+  readonly currentStateManager: CircuitBreakerStateManager;
 
   constructor(configOptions: ICircuitBreakerConfig) {
     this.config = new CircuitBreakerConfig(configOptions);

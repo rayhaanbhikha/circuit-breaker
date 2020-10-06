@@ -1,6 +1,6 @@
-import { CircuitBreakerConfig } from "./CircuitBreakerConfig";
+import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
 import { FixedSizeSlidingWindow } from "./FixedSizeSlidingWindow";
-import { Time } from "./time";
+import { Time } from "./Time";
 
 export class CircuitBreakerMetrics {
   private config: CircuitBreakerConfig;

@@ -1,4 +1,4 @@
-import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
+import { CircuitBreakerMetrics } from "../metrics/CircuitBreakerMetrics";
 
 export interface State {
   state: string;

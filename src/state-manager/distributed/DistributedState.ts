@@ -1,13 +1,13 @@
 import { EventEmitter } from "events";
 
-import { State } from "./states/State";
-import { ClosedState } from "./states/Closed";
-import { HalfOpenState } from "./states/HalfOpen";
-import { OpenState } from "./states/Open";
-import { CircuitBreakerConfig } from "./CircuitBreakerConfig";
-import { CircuitBreakerMetrics } from "./CircuitBreakerMetrics";
-import { CircuitBreakerState } from "./CircuitBreakerState";
-import { RedisClient } from "./redis-client";
+import { State } from "../../states/State";
+import { ClosedState } from "../../states/Closed";
+import { HalfOpenState } from "../../states/HalfOpen";
+import { OpenState } from "../../states/Open";
+import { CircuitBreakerConfig } from "../../CircuitBreakerConfig";
+import { CircuitBreakerMetrics } from "../../metrics/CircuitBreakerMetrics";
+import { CircuitBreakerStateManager } from "../CircuitBreakerStateManager";
+import { RedisClient } from "./RedisClient";
 import { IDistributedNodeState } from "./DistributedNodeState";
 import {
   addMilliseconds,
@@ -17,7 +17,7 @@ import {
   subMilliseconds,
 } from "date-fns";
 
-export class DistributedState implements CircuitBreakerState {
+export class DistributedState implements CircuitBreakerStateManager {
   private localState: State;
   private closedState: ClosedState;
   private openState: OpenState;

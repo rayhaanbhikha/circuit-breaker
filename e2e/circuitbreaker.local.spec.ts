@@ -3,7 +3,7 @@ import axios from "axios";
 
 import { CircuitBreaker } from "../src/CircuitBreaker";
 import { CallsNotPermittedException } from "../src/exceptions/CallsNotPermittedException";
-import { Time } from "../src/time";
+import { Time } from "../src/metrics/Time";
 
 const resourceURL = "http://localhost:8000";
 
