@@ -44,17 +44,17 @@ export class LocalState implements CircuitBreakerStateManager {
       (state: string) => {
         switch (state) {
           case CIRCUIT_BREAKER_STATES.CLOSED:
-            return this.setCurrentState(this.closedState);
+            return this.setState(this.closedState);
           case CIRCUIT_BREAKER_STATES.OPEN:
-            return this.setCurrentState(this.openState);
+            return this.setState(this.openState);
           case CIRCUIT_BREAKER_STATES.HALF_OPEN:
-            return this.setCurrentState(this.halfOpenState);
+            return this.setState(this.halfOpenState);
         }
       }
     );
   }
 
-  setCurrentState(newState: State) {
+  setState(newState: State) {
     this.currentState = newState;
     this.currentState.init();
   }
