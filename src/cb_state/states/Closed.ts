@@ -36,7 +36,7 @@ export class ClosedState implements State {
       this.metrics.recordSuccess();
       this.metrics.recordRequestEndTime();
 
-      if (this.checkIfCBshouldOpen()) this.stel.emit("TRANSITION_STATE", OPEN);
+      if (this.isReadyToOpenCB()) this.stel.emit("TRANSITION_STATE", OPEN);
 
       return res;
     } catch (error) {
@@ -44,16 +44,18 @@ export class ClosedState implements State {
       this.metrics.recordError();
       this.metrics.recordRequestEndTime();
 
-      if (this.checkIfCBshouldOpen()) this.stel.emit("TRANSITION_STATE", OPEN);
+      if (this.isReadyToOpenCB()) this.stel.emit("TRANSITION_STATE", OPEN);
 
       return this.config.fallback(error);
     }
   }
 
-  checkIfCBshouldOpen() {
+  isReadyToOpenCB() {
     return (
-      this.metrics.hasExceededErrorThreshold() ||
-      this.metrics.hasExceededSlowRateThreshold()
+      (this.metrics.isErrorSlidingWindowIsFull &&
+        this.metrics.hasExceededErrorThreshold()) ||
+      (this.metrics.isSlowDurationSlidingWindowIsFull &&
+        this.metrics.hasExceededSlowRateThreshold())
     );
   }
 }

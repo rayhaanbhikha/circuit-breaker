@@ -56,14 +56,18 @@ export class HalfOpenState implements State {
 
   isReadyToOpenCB() {
     return (
-      this.metrics.hasExceededErrorThreshold() ||
-      this.metrics.hasExceededSlowRateThreshold()
+      (this.metrics.isErrorSlidingWindowIsFull &&
+        this.metrics.hasExceededErrorThreshold()) ||
+      (this.metrics.isSlowDurationSlidingWindowIsFull &&
+        this.metrics.hasExceededSlowRateThreshold())
     );
   }
 
   isReadyToCloseCB() {
     return (
+      this.metrics.isErrorSlidingWindowIsFull &&
       !this.metrics.hasExceededErrorThreshold() &&
+      this.metrics.isSlowDurationSlidingWindowIsFull &&
       !this.metrics.hasExceededSlowRateThreshold()
     );
   }

@@ -87,7 +87,7 @@ describe("LOCAL Circuit breaker", () => {
 
       for (let i = 0; i < 20; i++) {
         jest.spyOn(Time, "differenceInMilliseconds").mockReturnValue(5_000);
-        await cb.exec(successfulAPICall);
+        await cb.exec(successfulAPICall).catch(() => {});
       }
 
       const { state } = await cb.currentStateManager.getState();
@@ -102,7 +102,7 @@ describe("LOCAL Circuit breaker", () => {
 
       for (let i = 0; i < 20; i++) {
         jest.spyOn(Time, "differenceInMilliseconds").mockReturnValue(5_000);
-        await cb.exec(successfulAPICall);
+        await cb.exec(successfulAPICall).catch(() => {});
       }
 
       const { state: finalState } = await cb.currentStateManager.getState();

@@ -20,7 +20,6 @@ export class CircuitBreakerMetrics {
 
   resetSlidingWindows(size: number) {
     this.errorsSlidingWindow = new FixedSizeSlidingWindow(size);
-    console.log("slidingWindowArranged");
     this.slowDurationSlidingWindow = new FixedSizeSlidingWindow(size);
   }
 
@@ -53,19 +52,25 @@ export class CircuitBreakerMetrics {
     this.errorsSlidingWindow.add(1);
   }
 
+  isErrorSlidingWindowIsFull() {
+    return this.errorsSlidingWindow.isFull;
+  }
+
   hasExceededErrorThreshold() {
     return (
-      this.errorsSlidingWindow.isFull &&
       this.errorsSlidingWindow.currentErrorThreshold >
-        this.config.failureRateThreshold
+      this.config.failureRateThreshold
     );
+  }
+
+  isSlowDurationSlidingWindowIsFull() {
+    return this.slowDurationSlidingWindow.isFull;
   }
 
   hasExceededSlowRateThreshold() {
     return (
-      this.slowDurationSlidingWindow.isFull &&
       this.slowDurationSlidingWindow.currentErrorThreshold >
-        this.config.slowCallRateThreshold
+      this.config.slowCallRateThreshold
     );
   }
 }
