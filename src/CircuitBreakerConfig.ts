@@ -1,4 +1,4 @@
-import { CallsNotPermittedException } from "./Exceptions/CallsNotPermittedException";
+import { CallsNotPermittedException } from "./exceptions/CallsNotPermittedException";
 
 export interface ICircuitBreakerConfig {
   distributedStateConfig?: {

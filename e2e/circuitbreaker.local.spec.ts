@@ -2,7 +2,7 @@ import nock from "nock";
 import axios from "axios";
 
 import { CircuitBreaker } from "../src/CircuitBreaker";
-import { CallsNotPermittedException } from "../src/Exceptions/CallsNotPermittedException";
+import { CallsNotPermittedException } from "../src/exceptions/CallsNotPermittedException";
 import { Time } from "../src/time";
 
 const resourceURL = "http://localhost:8000";

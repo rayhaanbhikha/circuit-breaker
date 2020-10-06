@@ -1,14 +1,14 @@
-import { CircuitBreakerConfig } from "../../CircuitBreakerConfig";
-import { CircuitBreakerMetrics } from "../../CircuitBreakerMetrics";
-import { EventEmitter } from "events";
-
+import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
+import { CircuitBreakerMetrics } from "../CircuitBreakerMetrics";
 import { BaseState, State } from "./State";
+import { EventEmitter } from "events";
+import { CLOSED_STATE } from "./Closed";
 import { OPEN } from "./Open";
 
-export const CLOSED_STATE = "CLOSED";
+export const HALF_OPEN = "HALF_OPEN";
 
-export class ClosedState extends BaseState implements State {
-  readonly state = CLOSED_STATE;
+export class HalfOpenState extends BaseState implements State {
+  readonly state = HALF_OPEN;
   private config: CircuitBreakerConfig;
   private stel: EventEmitter;
 
@@ -23,7 +23,9 @@ export class ClosedState extends BaseState implements State {
   }
 
   init() {
-    this.metrics.resetSlidingWindows(this.config.slidingWindowSize);
+    this.metrics.resetSlidingWindows(
+      this.config.permittedNumberOfCallsInHalfOpenState
+    );
   }
 
   async exec(callback: Function) {
@@ -35,11 +37,13 @@ export class ClosedState extends BaseState implements State {
       this.metrics.recordSuccess();
       this.metrics.recordRequestEndTime();
 
+      if (this.isReadyToCloseCB())
+        this.stel.emit("TRANSITION_STATE", CLOSED_STATE);
+
       if (this.isReadyToOpenCB()) this.stel.emit("TRANSITION_STATE", OPEN);
 
       return res;
     } catch (error) {
-      // TODO: filter errors with options or status codes?
       this.metrics.recordError();
       this.metrics.recordRequestEndTime();
 
