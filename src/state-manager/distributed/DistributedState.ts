@@ -59,21 +59,20 @@ export class DistributedState implements CircuitBreakerStateManager {
         // TODO: error handling.
         switch (state) {
           case this.closedState.state:
-            this.setLocalState(this.closedState);
-            await this.setRemoteState(this.closedState);
-            return;
+            return this.setState(this.closedState);
           case this.openState.state:
             this.distributedBroken = false;
-            this.setLocalState(this.openState);
-            await this.setRemoteState(this.openState);
-            return;
+            return this.setState(this.openState);
           case this.halfOpenState.state:
-            this.setLocalState(this.halfOpenState);
-            await this.setRemoteState(this.halfOpenState);
-            return;
+            return this.setState(this.halfOpenState);
         }
       }
     );
+  }
+
+  async setState(newState: State) {
+    this.setLocalState(newState);
+    await this.setRemoteState(newState);
   }
 
   setLocalState(newState: State) {
@@ -98,11 +97,6 @@ export class DistributedState implements CircuitBreakerStateManager {
       this.config.nodeId,
       nodeState
     );
-  }
-
-  async setState(newState: State) {
-    this.setLocalState(newState);
-    await this.setRemoteState(newState);
   }
 
   async getState() {
