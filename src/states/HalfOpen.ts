@@ -1,14 +1,10 @@
 import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
 import { CircuitBreakerMetrics } from "../metrics/CircuitBreakerMetrics";
-import { BaseState, State } from "./State";
+import { BaseState, CIRCUIT_BREAKER_STATES, State } from "./State";
 import { EventEmitter } from "events";
-import { CLOSED_STATE } from "./Closed";
-import { OPEN } from "./Open";
-
-export const HALF_OPEN = "HALF_OPEN";
 
 export class HalfOpenState extends BaseState implements State {
-  readonly state = HALF_OPEN;
+  readonly state = CIRCUIT_BREAKER_STATES.HALF_OPEN;
   private config: CircuitBreakerConfig;
   private stel: EventEmitter;
 
@@ -38,16 +34,18 @@ export class HalfOpenState extends BaseState implements State {
       this.metrics.recordRequestEndTime();
 
       if (this.isReadyToCloseCB())
-        this.stel.emit("TRANSITION_STATE", CLOSED_STATE);
+        this.stel.emit("TRANSITION_STATE", CIRCUIT_BREAKER_STATES.CLOSED);
 
-      if (this.isReadyToOpenCB()) this.stel.emit("TRANSITION_STATE", OPEN);
+      if (this.isReadyToOpenCB())
+        this.stel.emit("TRANSITION_STATE", CIRCUIT_BREAKER_STATES.OPEN);
 
       return res;
     } catch (error) {
       this.metrics.recordError();
       this.metrics.recordRequestEndTime();
 
-      if (this.isReadyToOpenCB()) this.stel.emit("TRANSITION_STATE", OPEN);
+      if (this.isReadyToOpenCB())
+        this.stel.emit("TRANSITION_STATE", CIRCUIT_BREAKER_STATES.OPEN);
 
       return this.config.fallback(error);
     }

@@ -2,6 +2,7 @@ import { IDistributedNodeState } from "./DistributedNodeState";
 import { isAfter, isWithinInterval, subMilliseconds } from "date-fns";
 import { CircuitBreakerConfig } from "../../CircuitBreakerConfig";
 import { Time } from "../../metrics/Time";
+import { CIRCUIT_BREAKER_STATES } from "../../states/State";
 
 export class DistributedStateArbiter {
   private config: CircuitBreakerConfig;
@@ -22,7 +23,7 @@ export class DistributedStateArbiter {
     for (const [_, nodeState] of Object.entries(distributedNodeStates)) {
       const currentTime = Time.getCurrentTime();
       if (
-        nodeState.localState === "OPEN" &&
+        nodeState.localState === CIRCUIT_BREAKER_STATES.OPEN &&
         isAfter(nodeState.lastLocallyBrokenUntil, currentTime) &&
         // make sure it was last contacted with some time limit.
         isWithinInterval(nodeState.lastContact, {

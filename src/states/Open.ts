@@ -1,13 +1,10 @@
 import { CircuitBreakerConfig } from "../CircuitBreakerConfig";
 import { CircuitBreakerMetrics } from "../metrics/CircuitBreakerMetrics";
-import { BaseState, State } from "./State";
+import { BaseState, CIRCUIT_BREAKER_STATES, State } from "./State";
 import { EventEmitter } from "events";
-import { HALF_OPEN } from "./HalfOpen";
-
-export const OPEN = "OPEN";
 
 export class OpenState extends BaseState implements State {
-  readonly state = OPEN;
+  readonly state = CIRCUIT_BREAKER_STATES.OPEN;
   private config: CircuitBreakerConfig;
   private stel: EventEmitter;
 
@@ -27,7 +24,7 @@ export class OpenState extends BaseState implements State {
 
   startTimerToHalfOpenState() {
     setTimeout(() => {
-      this.stel.emit("TRANSITION_STATE", HALF_OPEN);
+      this.stel.emit("TRANSITION_STATE", CIRCUIT_BREAKER_STATES.HALF_OPEN);
     }, this.config.waitDurationInOpenState); // TODO: should useBackOff algorithm.
   }
 

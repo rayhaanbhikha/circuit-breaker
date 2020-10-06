@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 
-import { State } from "../../states/State";
+import { CIRCUIT_BREAKER_STATES, State } from "../../states/State";
 import { ClosedState } from "../../states/Closed";
 import { HalfOpenState } from "../../states/HalfOpen";
 import { OpenState } from "../../states/Open";
@@ -43,11 +43,11 @@ export class LocalState implements CircuitBreakerStateManager {
       "TRANSITION_STATE",
       (state: string) => {
         switch (state) {
-          case this.closedState.state:
+          case CIRCUIT_BREAKER_STATES.CLOSED:
             return this.setCurrentState(this.closedState);
-          case this.openState.state:
+          case CIRCUIT_BREAKER_STATES.OPEN:
             return this.setCurrentState(this.openState);
-          case this.halfOpenState.state:
+          case CIRCUIT_BREAKER_STATES.HALF_OPEN:
             return this.setCurrentState(this.halfOpenState);
         }
       }

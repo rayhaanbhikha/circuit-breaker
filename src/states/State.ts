@@ -1,9 +1,15 @@
 import { CircuitBreakerMetrics } from "../metrics/CircuitBreakerMetrics";
 
 export interface State {
-  state: string;
+  state: CIRCUIT_BREAKER_STATES;
   init: () => void;
   exec: (cb: Function) => Promise<any>;
+}
+
+export enum CIRCUIT_BREAKER_STATES {
+  CLOSED = "CLOSED",
+  OPEN = "OPEN",
+  HALF_OPEN = "HALF_OPEN",
 }
 
 export class BaseState {

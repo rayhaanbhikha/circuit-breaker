@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { addMilliseconds, getUnixTime } from "date-fns";
 
-import { State } from "../../states/State";
+import { CIRCUIT_BREAKER_STATES, State } from "../../states/State";
 import { ClosedState } from "../../states/Closed";
 import { HalfOpenState } from "../../states/HalfOpen";
 import { OpenState } from "../../states/Open";
@@ -65,12 +65,12 @@ export class DistributedState implements CircuitBreakerStateManager {
       async (state: string) => {
         // TODO: error handling.
         switch (state) {
-          case this.closedState.state:
+          case CIRCUIT_BREAKER_STATES.CLOSED:
             return this.setState(this.closedState);
-          case this.openState.state:
+          case CIRCUIT_BREAKER_STATES.OPEN:
             this.distributedBroken = false;
             return this.setState(this.openState);
-          case this.halfOpenState.state:
+          case CIRCUIT_BREAKER_STATES.HALF_OPEN:
             return this.setState(this.halfOpenState);
         }
       }
@@ -128,7 +128,7 @@ export class DistributedState implements CircuitBreakerStateManager {
 
     this.distributedBroken = true;
 
-    if (this.localState.state === this.closedState.state)
+    if (this.localState.state === CIRCUIT_BREAKER_STATES.CLOSED)
       await this.setState(this.openState);
 
     // if out of sync treat local state as source of truth.
