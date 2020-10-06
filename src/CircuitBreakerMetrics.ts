@@ -52,7 +52,7 @@ export class CircuitBreakerMetrics {
     this.errorsSlidingWindow.add(1);
   }
 
-  isErrorSlidingWindowIsFull() {
+  isErrorSlidingWindowFull() {
     return this.errorsSlidingWindow.isFull;
   }
 
@@ -63,7 +63,7 @@ export class CircuitBreakerMetrics {
     );
   }
 
-  isSlowDurationSlidingWindowIsFull() {
+  isSlowDurationSlidingWindowFull() {
     return this.slowDurationSlidingWindow.isFull;
   }
 

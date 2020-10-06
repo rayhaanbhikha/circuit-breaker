@@ -1,16 +1,15 @@
 import { CircuitBreakerConfig } from "../../CircuitBreakerConfig";
 import { CircuitBreakerMetrics } from "../../CircuitBreakerMetrics";
-import { State } from "./State";
+import { BaseState, State } from "./State";
 import { EventEmitter } from "events";
 import { CLOSED_STATE } from "./Closed";
 import { OPEN } from "./Open";
 
 export const HALF_OPEN = "HALF_OPEN";
 
-export class HalfOpenState implements State {
+export class HalfOpenState extends BaseState implements State {
   readonly state = HALF_OPEN;
   private config: CircuitBreakerConfig;
-  private metrics: CircuitBreakerMetrics;
   private stel: EventEmitter;
 
   constructor(
@@ -18,8 +17,8 @@ export class HalfOpenState implements State {
     metrics: CircuitBreakerMetrics,
     stel: EventEmitter
   ) {
+    super(metrics);
     this.config = config;
-    this.metrics = metrics;
     this.stel = stel;
   }
 
@@ -52,23 +51,5 @@ export class HalfOpenState implements State {
 
       return this.config.fallback(error);
     }
-  }
-
-  isReadyToOpenCB() {
-    return (
-      (this.metrics.isErrorSlidingWindowIsFull &&
-        this.metrics.hasExceededErrorThreshold()) ||
-      (this.metrics.isSlowDurationSlidingWindowIsFull &&
-        this.metrics.hasExceededSlowRateThreshold())
-    );
-  }
-
-  isReadyToCloseCB() {
-    return (
-      this.metrics.isErrorSlidingWindowIsFull &&
-      !this.metrics.hasExceededErrorThreshold() &&
-      this.metrics.isSlowDurationSlidingWindowIsFull &&
-      !this.metrics.hasExceededSlowRateThreshold()
-    );
   }
 }

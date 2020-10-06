@@ -2,15 +2,14 @@ import { CircuitBreakerConfig } from "../../CircuitBreakerConfig";
 import { CircuitBreakerMetrics } from "../../CircuitBreakerMetrics";
 import { EventEmitter } from "events";
 
-import { State } from "./State";
+import { BaseState, State } from "./State";
 import { OPEN } from "./Open";
 
 export const CLOSED_STATE = "CLOSED";
 
-export class ClosedState implements State {
+export class ClosedState extends BaseState implements State {
   readonly state = CLOSED_STATE;
   private config: CircuitBreakerConfig;
-  private metrics: CircuitBreakerMetrics;
   private stel: EventEmitter;
 
   constructor(
@@ -18,8 +17,8 @@ export class ClosedState implements State {
     metrics: CircuitBreakerMetrics,
     stel: EventEmitter
   ) {
+    super(metrics);
     this.config = config;
-    this.metrics = metrics;
     this.stel = stel;
   }
 
@@ -48,14 +47,5 @@ export class ClosedState implements State {
 
       return this.config.fallback(error);
     }
-  }
-
-  isReadyToOpenCB() {
-    return (
-      (this.metrics.isErrorSlidingWindowIsFull &&
-        this.metrics.hasExceededErrorThreshold()) ||
-      (this.metrics.isSlowDurationSlidingWindowIsFull &&
-        this.metrics.hasExceededSlowRateThreshold())
-    );
   }
 }

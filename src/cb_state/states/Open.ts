@@ -1,16 +1,14 @@
 import { CircuitBreakerConfig } from "../../CircuitBreakerConfig";
-import { CircuitBreakerState } from "../CircuitBreakerState";
 import { CircuitBreakerMetrics } from "../../CircuitBreakerMetrics";
-import { State } from "./State";
+import { BaseState, State } from "./State";
 import { EventEmitter } from "events";
 import { HALF_OPEN } from "./HalfOpen";
 
 export const OPEN = "OPEN";
 
-export class OpenState implements State {
+export class OpenState extends BaseState implements State {
   readonly state = OPEN;
   private config: CircuitBreakerConfig;
-  private metrics: CircuitBreakerMetrics;
   private stel: EventEmitter;
 
   constructor(
@@ -18,8 +16,8 @@ export class OpenState implements State {
     metrics: CircuitBreakerMetrics,
     stel: EventEmitter
   ) {
+    super(metrics);
     this.config = config;
-    this.metrics = metrics;
     this.stel = stel;
   }
 
