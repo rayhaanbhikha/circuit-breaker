@@ -48,7 +48,7 @@ export class DistributedState implements CircuitBreakerStateManager {
 
     this.stateTransitionEventListener.on(
       "TRANSITION_STATE",
-      this.stateTransitionEventHandler
+      this.stateTransitionEventHandler.bind(this)
     );
 
     this.localState = this.closedState;
@@ -61,7 +61,7 @@ export class DistributedState implements CircuitBreakerStateManager {
   get nodeId() {
     return this.config.distributedState.nodeId;
   }
-  
+
   private async stateTransitionEventHandler(state: CIRCUIT_BREAKER_STATES) {
     switch (state) {
       case CIRCUIT_BREAKER_STATES.CLOSED:
@@ -73,7 +73,6 @@ export class DistributedState implements CircuitBreakerStateManager {
         return this.setState(this.halfOpenState);
     }
   }
-
 
   async setState(newState: State) {
     this.setLocalState(newState);

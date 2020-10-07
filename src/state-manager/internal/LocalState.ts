@@ -35,7 +35,7 @@ export class LocalState implements CircuitBreakerStateManager {
 
     this.stateTransitionEventListener.on(
       "TRANSITION_STATE",
-      this.stateTransitionEventHandler
+      this.stateTransitionEventHandler.bind(this)
     );
     this.currentState = this.closedState;
     this.currentState.init();
